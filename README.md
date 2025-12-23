@@ -1,110 +1,176 @@
-# FHEVM Hardhat Template
+# Silent Vault
 
-A Hardhat-based template for developing Fully Homomorphic Encryption (FHE) enabled Solidity smart contracts using the
-FHEVM protocol by Zama.
+Silent Vault is a privacy-preserving staking and borrowing protocol for cUSDT on FHEVM. It encrypts all stake and loan
+amounts on-chain using Zama's Fully Homomorphic Encryption (FHE), keeping user positions confidential while preserving
+verifiable execution.
 
-## Quick Start
+## Overview
 
-For detailed instructions see:
-[FHEVM Hardhat Quick Start Tutorial](https://docs.zama.ai/protocol/solidity-guides/getting-started/quick-start-tutorial)
+Silent Vault lets users:
+- Stake cUSDT and have the deposited amount recorded in encrypted form on-chain.
+- Borrow cUSDT against their stake, with the borrowed amount also stored as encrypted data.
+- Repay borrowed cUSDT and withdraw their stake, with all balance updates handled via encrypted operations.
 
-### Prerequisites
+All value-sensitive state transitions are executed on-chain using FHE, enabling private balances without off-chain
+custody or trusted computation.
 
-- **Node.js**: Version 20 or higher
-- **npm or yarn/pnpm**: Package manager
+## Problems This Project Solves
 
-### Installation
+- **On-chain privacy gap**: Traditional DeFi exposes balances, deposits, and loans. Silent Vault encrypts amounts so
+  observers cannot infer individual positions.
+- **Confidential credit usage**: Borrowing amount and repayment progress remain encrypted, mitigating strategies that
+  target visible borrower behavior.
+- **Transparent execution without leaking values**: The contract still enforces rules, but the amounts remain hidden.
+- **Reduced data leakage for institutions**: Entities that need privacy can use a public chain without exposing
+  sensitive treasury operations.
 
-1. **Install dependencies**
+## Advantages
 
-   ```bash
-   npm install
-   ```
+- **End-to-end encrypted amounts**: Stake, borrow, repay, and withdraw amounts are encrypted on-chain.
+- **Public verifiability**: Logic executes on-chain; correctness does not rely on off-chain servers.
+- **Composable with EVM tooling**: Built on Hardhat with standard deployment and testing flows.
+- **Clear separation of read/write flows**: Frontend uses viem for reads and ethers for writes, matching protocol
+  constraints for FHEVM.
+- **No reliance on local storage or frontend secrets**: The frontend avoids localStorage and environment variables.
 
-2. **Set up environment variables**
+## Core Features
 
-   ```bash
-   npx hardhat vars set MNEMONIC
+- **Stake cUSDT**: Deposit cUSDT and create an encrypted staking balance.
+- **Borrow cUSDT**: Borrow against your stake with encrypted loan accounting.
+- **Repay cUSDT**: Repay loans and update encrypted debt.
+- **Withdraw cUSDT**: Withdraw stake when loan conditions are satisfied.
 
-   # Set your Infura API key for network access
-   npx hardhat vars set INFURA_API_KEY
+## Architecture
 
-   # Optional: Set Etherscan API key for contract verification
-   npx hardhat vars set ETHERSCAN_API_KEY
-   ```
+- **Contracts (Hardhat + Solidity)**: Core staking/borrowing logic and encrypted accounting on FHEVM.
+- **FHE primitives (Zama FHEVM)**: Encrypted integers for on-chain balance and loan state.
+- **Frontend (React + Vite)**: User interface for staking, borrowing, repayment, and withdrawal.
+- **Wallet integration (RainbowKit)**: Wallet connection and transaction signing.
+- **Read/Write split**:
+  - Reads via viem.
+  - Writes via ethers.
+- **Relayer and FHE tooling**: Uses Zama-compatible flows for encrypted inputs and outputs.
 
-3. **Compile and test**
+## Data Privacy Model
 
-   ```bash
-   npm run compile
-   npm run test
-   ```
+- **Encrypted amounts**: All amounts are stored on-chain as encrypted integers.
+- **Public metadata**: Wallet addresses and transaction metadata are still public on-chain.
+- **No off-chain custody**: Funds are not held by a centralized service.
+- **Auditability**: Contract code and transactions are publicly verifiable, while numeric values remain private.
 
-4. **Deploy to local network**
+## Tech Stack
 
-   ```bash
-   # Start a local FHEVM-ready node
-   npx hardhat node
-   # Deploy to local network
-   npx hardhat deploy --network localhost
-   ```
+- **Smart contracts**: Solidity, Hardhat, Zama FHEVM
+- **Frontend**: React, Vite (no Tailwind CSS)
+- **Wallets**: RainbowKit
+- **RPC interaction**: viem (read), ethers (write)
+- **Language**: TypeScript
+- **Testing**: Hardhat test runner
+- **Package manager**: npm
 
-5. **Deploy to Sepolia Testnet**
+## User Flow (End-to-End)
 
-   ```bash
-   # Deploy to Sepolia
-   npx hardhat deploy --network sepolia
-   # Verify contract on Etherscan
-   npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
-   ```
+1. **Connect wallet** via RainbowKit.
+2. **Stake** cUSDT to create an encrypted balance.
+3. **Borrow** cUSDT against the encrypted stake.
+4. **Repay** borrow amount when ready.
+5. **Withdraw** stake after debt conditions are met.
 
-6. **Test on Sepolia Testnet**
-
-   ```bash
-   # Once deployed, you can run a simple test on Sepolia.
-   npx hardhat test --network sepolia
-   ```
-
-## 📁 Project Structure
+## Project Structure
 
 ```
-fhevm-hardhat-template/
-├── contracts/           # Smart contract source files
-│   └── FHECounter.sol   # Example FHE counter contract
+.
+├── contracts/           # Solidity contracts
 ├── deploy/              # Deployment scripts
-├── tasks/               # Hardhat custom tasks
-├── test/                # Test files
+├── tasks/               # Hardhat tasks
+├── test/                # Contract tests
+├── docs/                # Zama-related documentation
+├── src/                 # React frontend (Vite)
 ├── hardhat.config.ts    # Hardhat configuration
-└── package.json         # Dependencies and scripts
+└── README.md            # Project documentation
 ```
 
-## 📜 Available Scripts
+## Requirements
 
-| Script             | Description              |
-| ------------------ | ------------------------ |
-| `npm run compile`  | Compile all contracts    |
-| `npm run test`     | Run all tests            |
-| `npm run coverage` | Generate coverage report |
-| `npm run lint`     | Run linting checks       |
-| `npm run clean`    | Clean build artifacts    |
+- **Node.js**: 20+
+- **npm**: 9+
 
-## 📚 Documentation
+## Configuration
 
-- [FHEVM Documentation](https://docs.zama.ai/fhevm)
-- [FHEVM Hardhat Setup Guide](https://docs.zama.ai/protocol/solidity-guides/getting-started/setup)
-- [FHEVM Testing Guide](https://docs.zama.ai/protocol/solidity-guides/development-guide/hardhat/write_test)
-- [FHEVM Hardhat Plugin](https://docs.zama.ai/protocol/solidity-guides/development-guide/hardhat)
+Create a `.env` file at the project root for contract deployment and verification.
+Do not use a mnemonic phrase; use a private key.
 
-## 📄 License
+```
+INFURA_API_KEY=your_infura_key
+PRIVATE_KEY=your_private_key
+ETHERSCAN_API_KEY=optional_for_verification
+```
 
-This project is licensed under the BSD-3-Clause-Clear License. See the [LICENSE](LICENSE) file for details.
+## Build and Test
 
-## 🆘 Support
+```
+npm install
+npm run compile
+npm run test
+```
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/zama-ai/fhevm/issues)
-- **Documentation**: [FHEVM Docs](https://docs.zama.ai)
-- **Community**: [Zama Discord](https://discord.gg/zama)
+## Deployment
 
----
+1. **Start a local FHEVM-ready node** (for development tests only):
 
-**Built with ❤️ by the Zama team**
+```
+npx hardhat node
+```
+
+2. **Run tasks and tests** (ensures local behavior is correct):
+
+```
+npx hardhat test
+```
+
+3. **Deploy to Sepolia**:
+
+```
+npx hardhat deploy --network sepolia
+```
+
+4. **Verify contract (optional)**:
+
+```
+npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
+```
+
+## Frontend Notes (Implementation Constraints)
+
+- The frontend must use ABI files generated by deployment artifacts under `deployments/sepolia`.
+- Frontend reads are implemented with viem; writes are implemented with ethers.
+- The frontend must not use localStorage or environment variables.
+- The frontend must not connect to localhost networks.
+- The frontend avoids JSON files and does not use Tailwind CSS.
+
+## Security and Risk Notes
+
+- Encrypted amounts hide values, not wallet addresses.
+- Security depends on correct FHEVM configuration and contract logic.
+- Users are responsible for wallet security and private keys.
+- Testnet deployments are for development only; audit before mainnet use.
+
+## Known Limitations
+
+- Limited to cUSDT as the initial collateral/borrow asset.
+- Encrypted values can increase computational overhead.
+- Advanced risk controls (liquidations, dynamic interest rates) are planned but not yet included.
+
+## Future Roadmap
+
+- Add interest rate model and utilization-based pricing.
+- Add liquidation engine with privacy-preserving collateral checks.
+- Support multiple collateral assets beyond cUSDT.
+- Add position dashboards with encrypted analytics.
+- Improve relayer UX and encrypted input handling.
+- Extend testing coverage and formal verification.
+- Conduct third-party security audits.
+
+## License
+
+BSD-3-Clause-Clear. See `LICENSE`.
